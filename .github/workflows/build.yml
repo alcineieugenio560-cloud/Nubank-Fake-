@@ -16,8 +16,12 @@ jobs:
         with:
           gradle-version: 8.7
       - name: Build debug APK
-        run: gradle assembleDebug
+        run: |
+          DIR=$(dirname "$(find . -name settings.gradle -not -path './.git/*' | head -n1)")
+          echo "Projeto encontrado em: $DIR"
+          cd "$DIR"
+          gradle assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: violeta-bank-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: "**/build/outputs/apk/debug/*.apk"
