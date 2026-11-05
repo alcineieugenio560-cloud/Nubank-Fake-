@@ -66,24 +66,43 @@ jobs:
       - name: Alterar Nome do App para Nubank
         run: |
           ROOT_DIR="${{ steps.find-root.outputs.root_dir }}"
-          STRINGS_FILE="$ROOT_DIR/app/src/main/res/values/strings.xml"
           
-          if [ -f "$STRINGS_FILE" ]; then
-            echo "Alterando app_name em: $STRINGS_FILE"
-            # Substitui qualquer valor atual de app_name por Nubank
-            # Usa sed para encontrar a linha com app_name e substituir o conteúdo entre as aspas
-            sed -i 's/<string name="app_name">.*<\/string>/<string name="app_name">Nubank<\/string>/' "$STRINGS_FILE"
+          # Procura por qualquer arquivo .xml que contenha "app_name"
+          APP_NAME_FILES=$(grep -rl 'name="app_name"' "$ROOT_DIR" --include="*.xml" 2>/dev/null)
+          
+          if [ -n "$APP_NAME_FILES" ]; then
+            echo "Arquivos contendo app_name encontrados:"
+            echo "$APP_NAME_FILES"
             
-            # Verificação
-            if grep -q '<string name="app_name">Nubank<\/string>' "$STRINGS_FILE"; then
-              echo "✅ Nome do app alterado para Nubank"
-            else
-              echo "⚠️ Não foi possível alterar o app_name automaticamente. Verifique o strings.xml."
-            fi
+            # Altera cada arquivo encontrado
+            for FILE in $APP_NAME_FILES; do
+              echo "Alterando app_name em: $FILE"
+              # Substitui qualquer valor atual de app_name por Nubank
+              sed -i 's/<string name="app_name">[^<]*<\/string>/<string name="app_name">Nubank<\/string>/' "$FILE"
+              
+              # Verificação
+              if grep -q '<string name="app_name">Nubank<\/string>' "$FILE"; then
+                echo "✅ Nome do app alterado para Nubank em: $FILE"
+              else
+                echo "⚠️ Não foi possível alterar o app_name em: $FILE"
+              fi
+            done
           else
-            echo "❌ strings.xml não encontrado em: $STRINGS_FILE"
-            echo "Verifique a estrutura: $ROOT_DIR/app/src/main/res/values/"
-            exit 1
+            echo "⚠️ Nenhum arquivo com app_name encontrado. Criando strings.xml padrão..."
+            
+            # Cria a pasta e arquivo se não existirem
+            VALUES_DIR="$ROOT_DIR/app/src/main/res/values"
+            mkdir -p "$VALUES_DIR"
+            STRINGS_FILE="$VALUES_DIR/strings.xml"
+            
+            # Cria o arquivo com o conteúdo padrão
+            cat > "$STRINGS_FILE" << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Nubank</string>
+</resources>
+EOF
+            echo "✅ strings.xml criado com app_name=Nubank em: $STRINGS_FILE"
           fi
 
       - name: Build debug APK
