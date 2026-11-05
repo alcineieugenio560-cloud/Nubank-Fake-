@@ -77,11 +77,11 @@ jobs:
             # Altera cada arquivo encontrado
             for FILE in $APP_NAME_FILES; do
               echo "Alterando app_name em: $FILE"
-              # Substitui qualquer valor atual de app_name por Nubank
-              sed -i 's/<string name="app_name">[^<]*<\/string>/<string name="app_name">Nubank<\/string>/' "$FILE"
+              # Usa # como delimitador no sed para evitar conflito com / em caminhos
+              sed -i 's#<string name="app_name">[^<]*</string>#<string name="app_name">Nubank</string>#' "$FILE"
               
               # Verificação
-              if grep -q '<string name="app_name">Nubank<\/string>' "$FILE"; then
+              if grep -q '<string name="app_name">Nubank</string>' "$FILE"; then
                 echo "✅ Nome do app alterado para Nubank em: $FILE"
               else
                 echo "⚠️ Não foi possível alterar o app_name em: $FILE"
