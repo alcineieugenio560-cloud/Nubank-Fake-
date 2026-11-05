@@ -92,5 +92,5 @@ jobs:
           gradle assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: violeta-bank-apk
+          name: Nubank-apk
           path: "**/build/outputs/apk/debug/*.apk"
