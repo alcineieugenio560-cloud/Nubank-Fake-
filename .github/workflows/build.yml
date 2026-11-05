@@ -49,57 +49,41 @@ jobs:
             echo "❌ Nenhum ic_launcher.png encontrado no projeto"
             exit 1
           fi
-          
-          # Verifica se o AndroidManifest.xml referencia o ícone
-          MANIFEST="$ROOT_DIR/app/src/main/AndroidManifest.xml"
-          if [ -f "$MANIFEST" ]; then
-            if grep -q 'android:icon' "$MANIFEST"; then
-              echo "✅ AndroidManifest.xml já referencia o ícone"
-            else
-              echo "Adicionando referência ao ícone no AndroidManifest.xml..."
-              sed -i 's#<application#<application android:icon="@drawable/ic_launcher"#' "$MANIFEST"
-            fi
-          else
-            echo "⚠️ AndroidManifest.xml não encontrado em: $MANIFEST"
-          fi
 
-      - name: Alterar Nome do App para Nubank
+      - name: Corrigir AndroidManifest (Nome e Ícone)
         run: |
           ROOT_DIR="${{ steps.find-root.outputs.root_dir }}"
+          MANIFEST="$ROOT_DIR/app/src/main/AndroidManifest.xml"
           
-          # Procura por qualquer arquivo .xml que contenha "app_name"
-          APP_NAME_FILES=$(grep -rl 'name="app_name"' "$ROOT_DIR" --include="*.xml" 2>/dev/null)
-          
-          if [ -n "$APP_NAME_FILES" ]; then
-            echo "Arquivos contendo app_name encontrados:"
-            echo "$APP_NAME_FILES"
-            
-            # Altera cada arquivo encontrado
-            for FILE in $APP_NAME_FILES; do
-              echo "Alterando app_name em: $FILE"
-              # Usa # como delimitador no sed para evitar conflito com / em caminhos
-              # A expressão regular usa [^<]* para capturar qualquer coisa que não seja <
-              sed -i 's#<string name="app_name">[^<]*</string>#<string name="app_name">Nubank</string>#' "$FILE"
-              
-              # Verificação
-              if grep -q '<string name="app_name">Nubank</string>' "$FILE"; then
-                echo "✅ Nome do app alterado para Nubank em: $FILE"
-              else
-                echo "⚠️ Não foi possível alterar o app_name em: $FILE"
-              fi
-            done
-          else
-            echo "⚠️ Nenhum arquivo com app_name encontrado. Criando strings.xml padrão..."
-            
-            # Cria a pasta e arquivo se não existirem
-            VALUES_DIR="$ROOT_DIR/app/src/main/res/values"
-            mkdir -p "$VALUES_DIR"
-            STRINGS_FILE="$VALUES_DIR/strings.xml"
-            
-            # Cria o arquivo com o conteúdo padrão usando printf para evitar problemas com heredoc no YAML
-            printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <string name="app_name">Nubank</string>\n</resources>\n' > "$STRINGS_FILE"
-            echo "✅ strings.xml criado com app_name=Nubank em: $STRINGS_FILE"
+          if [ ! -f "$MANIFEST" ]; then
+            echo "❌ AndroidManifest.xml não encontrado em: $MANIFEST"
+            exit 1
           fi
+
+          # 1. Corrigir o Nome (android:label)
+          # O seu manifest tem android:label="Violeta Bank"
+          # Vamos substituir qualquer valor de android:label por "Nubank"
+          if grep -q 'android:label' "$MANIFEST"; then
+            echo "Alterando android:label para Nubank..."
+            # Usa # como delimitador. A regex captura android:label="QUALQUER COISA" e substitui
+            sed -i 's#android:label="[^"]*"#android:label="Nubank"#' "$MANIFEST"
+          else
+            # Se não houver label, adiciona no <application>
+            echo "Adicionando android:label='Nubank' ao <application>..."
+            sed -i 's#<application#<application android:label="Nubank"#' "$MANIFEST"
+          fi
+
+          # 2. Corrigir o Ícone (android:icon)
+          if grep -q 'android:icon' "$MANIFEST"; then
+            echo "✅ android:icon já presente."
+          else
+            echo "Adicionando android:icon='@drawable/ic_launcher' ao <application>..."
+            sed -i 's#<application#<application android:icon="@drawable/ic_launcher"#' "$MANIFEST"
+          fi
+
+          # Verificação final
+          echo "Conteúdo atual do <application> tag:"
+          grep -A 2 '<application' "$MANIFEST"
 
       - name: Build debug APK
         run: |
