@@ -63,6 +63,29 @@ jobs:
             echo "⚠️ AndroidManifest.xml não encontrado em: $MANIFEST"
           fi
 
+      - name: Alterar Nome do App para Nubank
+        run: |
+          ROOT_DIR="${{ steps.find-root.outputs.root_dir }}"
+          STRINGS_FILE="$ROOT_DIR/app/src/main/res/values/strings.xml"
+          
+          if [ -f "$STRINGS_FILE" ]; then
+            echo "Alterando app_name em: $STRINGS_FILE"
+            # Substitui qualquer valor atual de app_name por Nubank
+            # Usa sed para encontrar a linha com app_name e substituir o conteúdo entre as aspas
+            sed -i 's/<string name="app_name">.*<\/string>/<string name="app_name">Nubank<\/string>/' "$STRINGS_FILE"
+            
+            # Verificação
+            if grep -q '<string name="app_name">Nubank<\/string>' "$STRINGS_FILE"; then
+              echo "✅ Nome do app alterado para Nubank"
+            else
+              echo "⚠️ Não foi possível alterar o app_name automaticamente. Verifique o strings.xml."
+            fi
+          else
+            echo "❌ strings.xml não encontrado em: $STRINGS_FILE"
+            echo "Verifique a estrutura: $ROOT_DIR/app/src/main/res/values/"
+            exit 1
+          fi
+
       - name: Build debug APK
         run: |
           cd "${{ steps.find-root.outputs.root_dir }}"
