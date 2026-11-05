@@ -22,30 +22,50 @@ jobs:
       - name: Localizar Pasta Raiz do Projeto
         id: find-root
         run: |
-          # Encontra a pasta que contém o settings.gradle
-          # Isso lida com o fato de o projeto estar em uma subpasta (ex: violeta-bank-apk (1)/violeta-bank-apk)
           ROOT_DIR=$(dirname "$(find . -name settings.gradle -not -path './.git/*' | head -n1)")
           echo "root_dir=$ROOT_DIR" >> $GITHUB_OUTPUT
           echo "O projeto raiz foi encontrado em: $ROOT_DIR"
 
-      - name: Verificar Ícone
+      - name: Verificar e Corrigir Ícone
         run: |
           ROOT_DIR="${{ steps.find-root.outputs.root_dir }}"
-          ICON_PATH="$ROOT_DIR/app/src/main/res/drawable/ic_launcher.png"
           
-          if [ -f "$ICON_PATH" ]; then
-            echo "✅ Ícone ic_launcher.png encontrado em: $ICON_PATH"
+          # Cria a pasta drawable padrão se não existir
+          STANDARD_DRAWABLE="$ROOT_DIR/app/src/main/res/drawable"
+          mkdir -p "$STANDARD_DRAWABLE"
+          
+          # Busca por ic_launcher.png em qualquer subpasta drawable do projeto
+          ICON_FOUND=$(find "$ROOT_DIR" -name "ic_launcher.png" -type f | head -n1)
+          
+          if [ -n "$ICON_FOUND" ]; then
+            echo "✅ Ícone encontrado em: $ICON_FOUND"
+            
+            # Se o ícone não estiver na pasta padrão, copia para lá
+            if [ "$ICON_FOUND" != "$STANDARD_DRAWABLE/ic_launcher.png" ]; then
+              echo "Copiando ícone para localização padrão..."
+              cp "$ICON_FOUND" "$STANDARD_DRAWABLE/ic_launcher.png"
+            fi
           else
-            echo "❌ Erro: ic_launcher.png não encontrado no caminho esperado."
-            echo "Verifique a estrutura: $ROOT_DIR/app/src/main/res/drawable/"
-            ls -la "$ROOT_DIR/app/src/main/res/drawable/" || echo "Pasta drawable não existe."
+            echo "❌ Nenhum ic_launcher.png encontrado no projeto"
             exit 1
+          fi
+          
+          # Verifica se o AndroidManifest.xml referencia o ícone
+          MANIFEST="$ROOT_DIR/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            if grep -q 'android:icon' "$MANIFEST"; then
+              echo "✅ AndroidManifest.xml já referencia o ícone"
+            else
+              echo "Adicionando referência ao ícone no AndroidManifest.xml..."
+              sed -i 's|<application|<application android:icon="@drawable/ic_launcher"|' "$MANIFEST"
+            fi
+          else
+            echo "⚠️ AndroidManifest.xml não encontrado em: $MANIFEST"
           fi
 
       - name: Build debug APK
         run: |
           cd "${{ steps.find-root.outputs.root_dir }}"
-          # Usa o wrapper do projeto se existir, senão usa o gradle instalado
           if [ -f "./gradlew" ]; then
             chmod +x ./gradlew
             ./gradlew assembleDebug
