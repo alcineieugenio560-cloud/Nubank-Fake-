@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Violeta Bank – Simulador</title>
+<style>
+:root{
+  --bg:#f2f0f5;--surface:#fff;--ink:#1d1527;--muted:#6f6679;--brand:#7a1fd1;--brand-ink:#fff;--line:#e4dfea;--chip:#efe6fa;--ok:#1a8f4c;--bad:#c0332b;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#120c1a;--surface:#1e1529;--ink:#f3eefa;--muted:#a79bb7;--line:#33264a;--chip:#2b1d40;--ok:#4cd68b;--bad:#ff7a70}}
+:root[data-theme="dark"]{--bg:#120c1a;--surface:#1e1529;--ink:#f3eefa;--muted:#a79bb7;--line:#33264a;--chip:#2b1d40;--ok:#4cd68b;--bad:#ff7a70}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface);color:var(--ink);font-family:"Inter","Segoe UI",system-ui,sans-serif;display:flex;justify-content:center}
+.app{width:100%;max-width:440px;min-height:100vh;padding-bottom:40px}
+header{background:var(--brand);color:var(--brand-ink);padding:22px 20px 18px}
+.top{display:flex;justify-content:space-between;align-items:center}
+.avatar{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;font-weight:700}
+.hello{margin:18px 0 0;font-size:1.15rem;font-weight:600}
+.tools{display:flex;gap:8px}
+.tools button{background:none;color:#fff;border:0;width:40px;height:40px;display:grid;place-items:center;cursor:pointer;padding:0}
+.sim{display:inline-block;margin-top:10px;font-size:.75rem;background:rgba(0,0,0,.22);padding:4px 10px;border-radius:99px}
+section{background:var(--surface);margin:0;padding:20px;border-bottom:1px solid var(--line)}
+.row{display:flex;justify-content:space-between;align-items:center}
+h2{font-size:.95rem;margin:0;font-weight:600}
+.bal{font-size:2rem;font-weight:700;margin:8px 0 0;letter-spacing:-.5px}
+.muted{color:var(--muted);font-size:.85rem}
+.link{background:none;border:0;color:var(--brand);font-weight:600;cursor:pointer;font-size:.85rem;padding:4px 0}
+@media (prefers-color-scheme:dark){.link{color:#c79bf5}}
+.eye{background:none;border:0;font-size:1.1rem;cursor:pointer;color:var(--muted)}
+.actions{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:none;padding:18px 14px 18px;margin:0;border-bottom:0}
+.act{background:none;border:0;padding:6px 0;cursor:pointer;color:var(--ink);font:inherit;font-size:.74rem;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:8px}
+.act span{width:56px;height:56px;border-radius:50%;background:var(--bg);color:var(--ink);border:0;display:grid;place-items:center;font-size:1.4rem;transition:transform .12s}
+.act:active span{transform:scale(.92)}
+@media (prefers-reduced-motion:reduce){.act span{transition:none}}
+.act:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #b78af0;outline-offset:2px}
+.card{background:linear-gradient(135deg,#7a1fd1,#4b0f8a);color:#fff;border-radius:14px;padding:16px;margin-top:12px}
+.card .num{letter-spacing:2px;margin-top:22px;font-size:.95rem}
+.bar{height:8px;background:var(--chip);border-radius:9px;margin:10px 0 6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--brand);width:0}
+ul{list-style:none;margin:10px 0 0;padding:0}
+li{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+li:first-child{border-top:0}
+li b{display:block;font-weight:600;font-size:.95rem}
+.in{color:var(--ok)}.out{color:var(--ink)}
+.empty{padding:14px 0;color:var(--muted);font-size:.9rem}
+dialog{border:0;border-radius:20px;padding:22px;width:min(92vw,400px);background:var(--surface);color:var(--ink)}
+.pills{background:none;padding:0 20px 20px;margin:0;display:grid;gap:10px;border-bottom:1px solid var(--line)}
+.pill{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:var(--bg);color:var(--ink);border:0;border-radius:14px;padding:16px;font:inherit;font-size:.9rem;cursor:pointer}
+#emp b{color:var(--brand)}
+@media (prefers-color-scheme:dark){#emp b{color:#c79bf5}}
+.bal{cursor:pointer;display:inline-block}
+.pixlogo{display:block;width:28px;height:28px;background:currentColor;-webkit-mask:url(data:image/png;base64,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) center/contain no-repeat;mask:url(data:image/png;base64,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) center/contain no-repeat}
+.foot{padding:22px 20px 8px;text-align:center;font-size:.8rem;color:var(--muted);line-height:1.4}
+dialog::backdrop{background:rgba(10,5,20,.55)}
+label{display:block;font-size:.85rem;color:var(--muted);margin:14px 0 6px}
+input,select{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:1rem}
+.btns{display:flex;gap:10px;margin-top:20px}
+.btns button{flex:1;padding:13px;border-radius:12px;border:0;font:inherit;font-weight:600;cursor:pointer}
+.pri{background:var(--brand);color:#fff}.sec{background:var(--chip);color:var(--ink)}
+.err{color:var(--bad);font-size:.85rem;min-height:1.2em;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="top">
+      <div class="avatar" id="ini">V</div>
+      <div class="tools"><button id="eye" aria-label="Ocultar valores"></button><button id="help" aria-label="Ajuda"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/></svg></button><button id="mail" aria-label="Convidar amigos"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5"/><path d="m3 7 9 6 9-6M19 15v6M16 18h6"/></svg></button></div>
+    </div>
+    <p class="hello" id="hello">Olá, Cliente</p>
+    
+  </header>
+
+  <section>
+    <div class="row"><h2>Conta</h2></div>
+    <p class="bal" id="bal" role="button" tabindex="0" aria-label="Editar saldo">R$ 0,00</p>
+    <p class="muted" id="rend">Rendendo 100% do CDI (simulado)</p>
+  </section>
+
+  <section class="actions" aria-label="Ações">
+    <button class="act" data-a="pix"><span><i class="pixlogo" aria-hidden="true"></i></span>Pix</button>
+    <button class="act" data-a="boleto"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="butt" aria-hidden="true"><path d="M4 6v12M7.5 6v12M11 6v12M15 6v12M18 6v12M21 6v12" stroke-width="1.6"/><path d="M11 6v12M15 6v12" stroke-width="2.4"/></svg></span>Pagar</button>
+    <button class="act" data-a="dep"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3" width="19" height="11" rx="2"/><circle cx="12" cy="8.5" r="2.3"/><path d="M12 16.5v5M9.5 19.5l2.5 2.5 2.5-2.5"/></svg></span>Depositar</button>
+    <button class="act" data-a="emp"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M14.6 9.6C14.2 8.8 13.3 8.3 12 8.3c-1.5 0-2.5.7-2.5 1.8s1 1.5 2.5 1.9 2.5.8 2.5 1.9-1 1.8-2.5 1.8c-1.3 0-2.2-.5-2.6-1.3"/></svg></span>Empréstimo</button>
+    <button class="act" data-a="transf"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="8" width="19" height="11" rx="2"/><circle cx="12" cy="13.5" r="2.3"/><path d="M12 6.5v-5M9.5 4 12 1.5 14.5 4"/></svg></span>Transferir</button>
+  </section>
+
+  <section class="pills">
+    <button class="pill" id="cards"><span>Meus cartões</span><b>2</b></button>
+    <button class="pill" id="emp"></button>
+  </section>
+
+  <section>
+    <div class="row"><h2>Cartão de crédito</h2><span class="muted" id="fat">Fatura R$ 0,00</span></div>
+    <div class="card"><div class="row"><b>Violeta</b><span>Crédito</span></div><div class="num">•••• •••• •••• 4821</div></div>
+    <div class="bar"><i id="lim"></i></div>
+    <p class="muted" id="limTxt"></p>
+    <div class="btns"><button class="sec" id="editFat">Editar fatura</button><button class="sec" id="editLim">Editar limite</button></div>
+  </section>
+
+  <section>
+    <div class="row"><h2>Caixinhas</h2><button class="link" id="newBox">Nova</button></div>
+    <ul id="boxes"></ul>
+  </section>
+
+  <section>
+    <div class="row"><h2>Histórico</h2><button class="link" id="clear">Limpar</button></div>
+    <ul id="hist"></ul>
+  </section>
+  <footer class="foot">Violeta Bank é um simulador. Todo o dinheiro e todos os dados são fictícios e não têm valor real.</footer>
+</div>
+
+<dialog id="dlg"><form method="dialog" id="f"><h2 id="dt"></h2><div id="dbody"></div><div class="err" id="derr"></div><div class="btns"><button type="button" class="sec" id="dcancel">Cancelar</button><button type="submit" class="pri" id="dok">Confirmar</button></div></form></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+var KEY="violeta-bank-v1";
+var EYE='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>';
+var EYE_ON=EYE+'</svg>',EYE_OFF=EYE+'<path d="M4 4l16 16"/></svg>';
+var S={nome:"Cliente",saldo:1250.75,fatura:380.2,limite:3000,caixinhas:[{n:"Viagem",v:500}],hist:[],hide:false,emp:20000};
+try{var raw=localStorage.getItem(KEY);if(raw)S=Object.assign(S,JSON.parse(raw));}catch(e){}
+var $=function(i){return document.getElementById(i)};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function brl(n){return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+function money(n){return S.hide?"R$ •••••":brl(n)}
+function toast(t){var e=$("toast");e.textContent=t;e.classList.add("on");setTimeout(function(){e.classList.remove("on")},2200)}
+function log(t,v,tipo){S.hist.unshift({t:t,v:v,tipo:tipo,d:new Date().toLocaleString("pt-BR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})});S.hist=S.hist.slice(0,40)}
+function render(){
+  $("hello").textContent="Olá, "+S.nome;$("ini").textContent=S.nome.charAt(0).toUpperCase();
+  $("bal").textContent=money(S.saldo);
+  $("fat").textContent="Fatura "+money(S.fatura);
+  var pct=S.limite>0?Math.min(100,S.fatura/S.limite*100):0;$("lim").style.width=pct+"%";
+  $("limTxt").textContent=S.hide?"Limite disponível •••":"Limite disponível "+brl(Math.max(0,S.limite-S.fatura))+" de "+brl(S.limite);
+  $("eye").innerHTML=S.hide?EYE_OFF:EYE_ON;$("eye").setAttribute("aria-label",S.hide?"Mostrar valores":"Ocultar valores");
+  $("emp").innerHTML="<span>Você tem "+(S.hide?"R$ •••••":brl(S.emp))+" disponíveis para <b>empréstimo</b>.</span>";
+  var b=$("boxes");b.innerHTML="";
+  if(!S.caixinhas.length){b.innerHTML='<div class="empty">Crie uma caixinha para separar dinheiro.</div>'}
+  S.caixinhas.forEach(function(c,i){var li=document.createElement("li");li.innerHTML="<div><b></b><span class='muted'>Guardado</span></div><div></div>";li.querySelector("b").textContent=c.n;li.lastChild.textContent=money(c.v);b.appendChild(li)});
+  var h=$("hist");h.innerHTML="";
+  if(!S.hist.length){h.innerHTML='<div class="empty">Nenhuma movimentação ainda. Faça um Pix ou depósito.</div>'}
+  S.hist.forEach(function(x){var li=document.createElement("li");li.innerHTML="<div><b></b><span class='muted'></span></div><div></div>";li.querySelector("b").textContent=x.t;li.querySelector("span").textContent=x.d;var v=li.lastChild;v.className=x.tipo;v.textContent=(x.tipo==="in"?"+ ":"− ")+money(x.v);h.appendChild(li)});
+}
+function parse(v){var n=parseFloat(String(v).replace(/\./g,"").replace(",","."));return isNaN(n)?null:Math.round(n*100)/100}
+var cb=null;
+function ask(title,fields,ok){
+  $("dt").textContent=title;$("derr").textContent="";
+  var h="";fields.forEach(function(f,i){h+='<label for="f'+i+'">'+f.l+'</label><input id="f'+i+'" inputmode="'+(f.t||"decimal")+'" autocomplete="off" value="'+(f.v==null?"":f.v)+'" placeholder="'+(f.p||"")+'">'});
+  $("dbody").innerHTML=h;cb=function(){var vals=fields.map(function(f,i){return $("f"+i).value.trim()});return ok(vals)};
+  $("dlg").showModal();var first=$("f0");if(first)first.focus();
+}
+$("f").addEventListener("submit",function(e){e.preventDefault();var r=cb&&cb();if(r){$("derr").textContent=r}else{$("dlg").close();save();render()}});
+$("dcancel").onclick=function(){$("dlg").close()};
+function money2(s){return String(s).replace(".",",")}
+
+$("bal").onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();$("bal").click()}};
+$("bal").onclick=function(){ask("Editar saldo da conta",[{l:"Novo saldo (R$)",v:money2(S.saldo.toFixed(2)),p:"0,00"}],function(v){var n=parse(v[0]);if(n===null||n<0)return"Digite um valor válido, como 1500,00.";var d=n-S.saldo;S.saldo=n;if(d!==0)log("Ajuste de saldo",Math.abs(d),d>0?"in":"out");toast("Saldo atualizado")})};
+$("editFat").onclick=function(){ask("Editar fatura",[{l:"Valor da fatura (R$)",v:money2(S.fatura.toFixed(2))}],function(v){var n=parse(v[0]);if(n===null||n<0)return"Digite um valor válido.";S.fatura=n})};
+$("editLim").onclick=function(){ask("Editar limite",[{l:"Limite total (R$)",v:money2(S.limite.toFixed(2))}],function(v){var n=parse(v[0]);if(n===null||n<0)return"Digite um valor válido.";S.limite=n})};
+$("hello").onclick=function(){ask("Seu nome",[{l:"Nome",v:S.nome,t:"text"}],function(v){if(!v[0])return"Digite um nome.";S.nome=v[0].slice(0,20)})};
+$("newBox").onclick=function(){ask("Nova caixinha",[{l:"Nome",t:"text",p:"Ex.: Reserva"},{l:"Valor inicial (R$)",p:"0,00"}],function(v){var n=parse(v[1]||"0");if(!v[0])return"Dê um nome à caixinha.";if(n===null||n<0)return"Valor inválido.";if(n>S.saldo)return"Saldo insuficiente na conta.";S.saldo-=n;S.caixinhas.push({n:v[0].slice(0,24),v:n});if(n)log("Guardado em "+v[0],n,"out")})};
+$("clear").onclick=function(){S.hist=[];save();render()};
+$("eye").onclick=function(){S.hide=!S.hide;save();render()};
+$("help").onclick=function(){ask("Ajuda",[],function(){});$("dbody").innerHTML="<p class='muted'>Toque no saldo para editá-lo. Use os botões redondos para Pix, pagar, depositar, pedir empréstimo e transferir. Toque no olho para ocultar os valores. Tudo aqui é fictício.</p>"};
+$("mail").onclick=function(){ask("Convidar um amigo",[{l:"E-mail do amigo",t:"email",p:"nome@email.com"}],function(v){if(!/^\S+@\S+\.\S+$/.test(v[0]))return"Digite um e-mail válido.";toast("Convite enviado (simulado)")})};
+
+document.querySelectorAll(".act").forEach(function(b){b.onclick=function(){
+  var a=b.dataset.a;
+  if(a==="pix")ask("Enviar Pix",[{l:"Para quem",t:"text",p:"Nome ou chave"},{l:"Valor (R$)",p:"0,00"}],function(v){var n=parse(v[1]);if(!v[0])return"Informe o destinatário.";if(n===null||n<=0)return"Digite um valor maior que zero.";if(n>S.saldo)return"Saldo insuficiente.";S.saldo-=n;log("Pix para "+v[0],n,"out");toast("Pix enviado")});
+  if(a==="boleto")ask("Pagar boleto",[{l:"Descrição",t:"text",p:"Ex.: Conta de luz"},{l:"Valor (R$)",p:"0,00"}],function(v){var n=parse(v[1]);if(!v[0])return"Informe a descrição.";if(n===null||n<=0)return"Digite um valor maior que zero.";if(n>S.saldo)return"Saldo insuficiente.";S.saldo-=n;log("Boleto: "+v[0],n,"out");toast("Boleto pago")});
+  if(a==="emp")ask("Pedir empréstimo",[{l:"Valor (R$)",p:"0,00"}],function(v){var n=parse(v[0]);if(n===null||n<=0)return"Digite um valor maior que zero.";if(n>S.emp)return"Valor acima do disponível para empréstimo.";S.emp-=n;S.saldo+=n;log("Empréstimo",n,"in");toast("Empréstimo creditado")});
+  if(a==="transf")ask("Transferir",[{l:"Para quem",t:"text",p:"Nome ou conta"},{l:"Valor (R$)",p:"0,00"}],function(v){var n=parse(v[1]);if(!v[0])return"Informe o destinatário.";if(n===null||n<=0)return"Digite um valor maior que zero.";if(n>S.saldo)return"Saldo insuficiente.";S.saldo-=n;log("Transferência para "+v[0],n,"out");toast("Transferência feita")});
+  if(a==="dep")ask("Depositar",[{l:"Valor (R$)",p:"0,00"}],function(v){var n=parse(v[0]);if(n===null||n<=0)return"Digite um valor maior que zero.";S.saldo+=n;log("Depósito",n,"in");toast("Depósito feito")});
+  if(a==="saq")ask("Sacar",[{l:"Valor (R$)",p:"0,00"}],function(v){var n=parse(v[0]);if(n===null||n<=0)return"Digite um valor maior que zero.";if(n>S.saldo)return"Saldo insuficiente.";S.saldo-=n;log("Saque",n,"out");toast("Saque realizado")});
+}});
+$("cards").onclick=function(){toast("Cartão físico e virtual")};
+$("emp").onclick=function(){ask("Ver limite de empréstimo",[{l:"Valor disponível (R$)",v:money2(S.emp.toFixed(2))}],function(v){var n=parse(v[0]);if(n===null||n<0)return"Digite um valor válido.";S.emp=n})};
+render();
+</script>
+</body>
+</html>
