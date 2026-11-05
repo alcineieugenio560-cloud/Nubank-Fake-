@@ -22,8 +22,6 @@ jobs:
       - name: Localizar Pasta Raiz do Projeto
         id: find-root
         run: |
-          # Encontra o diretório que contém o settings.gradle
-          # No seu caso, isso resolve para ./violeta-bank-apk (1)/violeta-bank-apk
           ROOT_DIR=$(dirname "$(find . -name settings.gradle -not -path './.git/*' | head -n1)")
           echo "root_dir=$ROOT_DIR" >> $GITHUB_OUTPUT
           echo "O projeto raiz foi encontrado em: $ROOT_DIR"
@@ -36,14 +34,22 @@ jobs:
           STANDARD_DRAWABLE="$ROOT_DIR/app/src/main/res/drawable"
           mkdir -p "$STANDARD_DRAWABLE"
           
-          # Busca por ic_launcher.png em QUALQUER lugar dentro da raiz do projeto
-          # Isso é mais simples e confiável que o find aninhado anterior
+          # 1. Tenta encontrar o ícone DENTRO da raiz do projeto primeiro
           ICON_FOUND=$(find "$ROOT_DIR" -name "ic_launcher.png" -type f | head -n1)
+          
+          # 2. Se não encontrou, tenta na PASTA PAI da raiz do projeto
+          #    (ex: se ROOT_DIR é ./violeta-bank-apk (1)/violeta-bank-apk,
+          #     procura em ./violeta-bank-apk (1))
+          if [ -z "$ICON_FOUND" ]; then
+            PARENT_DIR=$(dirname "$ROOT_DIR")
+            echo "Ícone não encontrado na raiz do projeto. Procurando na pasta pai: $PARENT_DIR"
+            ICON_FOUND=$(find "$PARENT_DIR" -maxdepth 3 -name "ic_launcher.png" -type f | head -n1)
+          fi
           
           if [ -n "$ICON_FOUND" ]; then
             echo "✅ Ícone encontrado em: $ICON_FOUND"
             
-            # Se o ícone não estiver exatamente na pasta drawable padrão, copia para lá
+            # Copia para a localização padrão se não estiver lá
             if [ "$ICON_FOUND" != "$STANDARD_DRAWABLE/ic_launcher.png" ]; then
               echo "Copiando ícone para localização padrão: $STANDARD_DRAWABLE/ic_launcher.png"
               cp "$ICON_FOUND" "$STANDARD_DRAWABLE/ic_launcher.png"
@@ -51,18 +57,17 @@ jobs:
               echo "✅ Ícone já está na localização padrão."
             fi
           else
-            echo "❌ Nenhum ic_launcher.png encontrado dentro de: $ROOT_DIR"
+            echo "❌ Nenhum ic_launcher.png encontrado na raiz nem na pasta pai."
             echo "Conteúdo da pasta drawable padrão:"
-            ls -la "$STANDARD_DRAWABLE" || echo "Pasta drawable padrão não existe ou está vazia."
-            echo "Buscando por arquivos .png na raiz do projeto para diagnóstico:"
-            find "$ROOT_DIR" -name "*.png" -type f
+            ls -la "$STANDARD_DRAWABLE" || echo "Pasta drawable padrão não existe."
+            echo "Conteúdo da pasta pai:"
+            ls -la "$(dirname "$ROOT_DIR")" || echo "Pasta pai não existe."
             exit 1
           fi
 
       - name: Corrigir AndroidManifest (Nome e Ícone)
         run: |
           ROOT_DIR="${{ steps.find-root.outputs.root_dir }}"
-          # O Manifest está no módulo app da raiz do projeto
           MANIFEST="$ROOT_DIR/app/src/main/AndroidManifest.xml"
           
           if [ ! -f "$MANIFEST" ]; then
