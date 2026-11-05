@@ -15,10 +15,79 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
+      - name: Adicionar icone do app
+        run: |
+          DIR=$(dirname "$(find . -name settings.gradle -not -path './.git/*' | head -n1)")
+          mkdir -p "$DIR/app/src/main/res/drawable"
+          rm -f "$DIR"/app/src/main/res/drawable/ic_launcher.*
+          base64 -d > "$DIR/app/src/main/res/drawable/ic_launcher.png" <<'IMG'
+            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
+            Z/+xmi0myX4SCRAggIaqOduKdg4BAKUNnpcXerVziSggbOnKddk77h0my0qLKVx8729mGtVQukmyn0QCRJqki9UuzrZ2UkFup7i9
+            qj6EiMGyvuvTY9miJG2xyyNFQuKZ15Zf/JdaIjKHyXcgAOFA7VTQXTqnMCrNMoGraj/Bst54Y27nPcO20Y/BeuLgdNAiITB5zyJ5
+            DkQgHWzOR43p0AQQVqkgLy9LFW91U0GIGLb1nvvHTMOD+FibzOHxY403vlPPlpJnP8l0IALhYmteLXTOtlJ8gogABZQ2OCpctVQQ
+            CvBbassH8rf94ZBd9EOAiDqiwwenad0uPPblEoaIUajNHTG7Mx2KAKC00V3FVBAiKp/2PjDmZoVV9GMyh698a+Hks81sUWpNDNBa
+            htIrFTH7Qx1Dm73V2smjAH9JXXPbwK2/N2Tuv8ZfiBExaOkjj8w4niAiYAda22wQzP+syztiQ1tXDyBEFdLeB8ekZ3fMyOSpn39i
+            /uxry96ASErhIiUAEZH0cP5UYE7P2J74LG9yV6VaiQL8ptp2x8DNHxu0in7MTq1ZjY793WxmIGGZw1Q4EIF0sH4uaJ1XVotY54LY
+            iJMtSR1dcSoIUSvY91Clc8oRLb4AiPDUF+ZqU4GTEZRgfpLqQJ0Le7XTge1GDAAKY45J2V0JPyjRb6hr7xy48bfKdvajQSBWJ/3n
+            /qmalEM/KYyBhES/qWunAjt+EAAgU5D5YUdfaSqIgGDfgYqQYGU/plfL9x6ZWapF0kVIuBLcaJyo06zDdvsGAIObvCu5IIYC/YZ+
+            3+7C9b9atOoWZc4knX659dI3ziexcJEqgFB0c0t15VSQe+VXVPcfqKDsJhifODQdtTWKxNtPkvNAREJibSowZyGsVh4DUNe39YSA
+            dkPt2Ffcsd/Ofkzh4q0jjTe/u5jQwkWKHIjA8bB+NlyuK7tLhuaC2EbPNnNzMYFCwP4D44g2V4sIEEFFNHHoHKbBehLvQCAcbFaj
+            xRm7bi8m7ilvdqXbzZVhc2Xnug+Xtt9laT+aUODL3zw/+dxSpiCTmzlMVQwUtrXpWWYbiJQqrpcX2v5UEGkSDu4/MG73n1LntsbR
+            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
+            rkJggg==
+          IMG
+          MANIFEST="$DIR/app/src/main/AndroidManifest.xml"
+          grep -q 'android:icon' "$MANIFEST" || sed -i 's|<application|<application android:icon="@drawable/ic_launcher"|' "$MANIFEST"
       - name: Build debug APK
         run: |
           DIR=$(dirname "$(find . -name settings.gradle -not -path './.git/*' | head -n1)")
-          echo "Projeto encontrado em: $DIR"
           cd "$DIR"
           gradle assembleDebug
       - uses: actions/upload-artifact@v4
