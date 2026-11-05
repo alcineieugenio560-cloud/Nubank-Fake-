@@ -22,6 +22,8 @@ jobs:
       - name: Localizar Pasta Raiz do Projeto
         id: find-root
         run: |
+          # Procura pelo settings.gradle. 
+          # Como a estrutura mudou, isso agora deve apontar para ./violeta-bank-apk (1)
           ROOT_DIR=$(dirname "$(find . -name settings.gradle -not -path './.git/*' | head -n1)")
           echo "root_dir=$ROOT_DIR" >> $GITHUB_OUTPUT
           echo "O projeto raiz foi encontrado em: $ROOT_DIR"
@@ -30,29 +32,37 @@ jobs:
         run: |
           ROOT_DIR="${{ steps.find-root.outputs.root_dir }}"
           
-          # Cria a pasta drawable padrão se não existir
+          # Garante que a pasta drawable padrão exista na NOVA estrutura
+          # Ex: ./violeta-bank-apk (1)/app/src/main/res/drawable
           STANDARD_DRAWABLE="$ROOT_DIR/app/src/main/res/drawable"
           mkdir -p "$STANDARD_DRAWABLE"
           
-          # Busca por ic_launcher.png em qualquer subpasta drawable do projeto
-          ICON_FOUND=$(find "$ROOT_DIR" -name "ic_launcher.png" -type f | head -n1)
+          # Busca por ic_launcher.png em qualquer subpasta 'drawable' dentro da raiz do projeto
+          # Isso lida com o caso de estar em ./violeta-bank-apk (1)/drawable ou ./violeta-bank-apk (1)/app/src/main/res/drawable
+          ICON_FOUND=$(find "$ROOT_DIR" -type d -name "drawable*" -exec find {} -name "ic_launcher.png" -type f \; | head -n1)
           
           if [ -n "$ICON_FOUND" ]; then
             echo "✅ Ícone encontrado em: $ICON_FOUND"
             
-            # Se o ícone não estiver na pasta padrão, copia para lá
+            # Se o ícone não estiver na pasta drawable padrão, copia para lá
             if [ "$ICON_FOUND" != "$STANDARD_DRAWABLE/ic_launcher.png" ]; then
-              echo "Copiando ícone para localização padrão..."
+              echo "Copiando ícone para localização padrão: $STANDARD_DRAWABLE/ic_launcher.png"
               cp "$ICON_FOUND" "$STANDARD_DRAWABLE/ic_launcher.png"
+            else
+              echo "✅ Ícone já está na localização padrão."
             fi
           else
-            echo "❌ Nenhum ic_launcher.png encontrado no projeto"
+            echo "❌ Nenhum ic_launcher.png encontrado em pastas drawable dentro de: $ROOT_DIR"
+            # Lista pastas drawable para debug
+            echo "Pastas drawable encontradas:"
+            find "$ROOT_DIR" -type d -name "drawable*"
             exit 1
           fi
 
       - name: Corrigir AndroidManifest (Nome e Ícone)
         run: |
           ROOT_DIR="${{ steps.find-root.outputs.root_dir }}"
+          # O Manifest agora deve estar em ./violeta-bank-apk (1)/app/src/main/AndroidManifest.xml
           MANIFEST="$ROOT_DIR/app/src/main/AndroidManifest.xml"
           
           if [ ! -f "$MANIFEST" ]; then
@@ -61,11 +71,8 @@ jobs:
           fi
 
           # 1. Corrigir o Nome (android:label)
-          # O seu manifest tem android:label="Violeta Bank"
-          # Vamos substituir qualquer valor de android:label por "Nubank"
           if grep -q 'android:label' "$MANIFEST"; then
             echo "Alterando android:label para Nubank..."
-            # Usa # como delimitador. A regex captura android:label="QUALQUER COISA" e substitui
             sed -i 's#android:label="[^"]*"#android:label="Nubank"#' "$MANIFEST"
           else
             # Se não houver label, adiciona no <application>
@@ -82,8 +89,8 @@ jobs:
           fi
 
           # Verificação final
-          echo "Conteúdo atual do <application> tag:"
-          grep -A 2 '<application' "$MANIFEST"
+          echo "Conteúdo atual da tag <application>:"
+          grep -A 3 '<application' "$MANIFEST"
 
       - name: Build debug APK
         run: |
