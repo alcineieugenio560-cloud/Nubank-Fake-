@@ -57,7 +57,7 @@ jobs:
               echo "✅ AndroidManifest.xml já referencia o ícone"
             else
               echo "Adicionando referência ao ícone no AndroidManifest.xml..."
-              sed -i 's|<application|<application android:icon="@drawable/ic_launcher"|' "$MANIFEST"
+              sed -i 's#<application#<application android:icon="@drawable/ic_launcher"#' "$MANIFEST"
             fi
           else
             echo "⚠️ AndroidManifest.xml não encontrado em: $MANIFEST"
@@ -78,6 +78,7 @@ jobs:
             for FILE in $APP_NAME_FILES; do
               echo "Alterando app_name em: $FILE"
               # Usa # como delimitador no sed para evitar conflito com / em caminhos
+              # A expressão regular usa [^<]* para capturar qualquer coisa que não seja <
               sed -i 's#<string name="app_name">[^<]*</string>#<string name="app_name">Nubank</string>#' "$FILE"
               
               # Verificação
@@ -95,13 +96,8 @@ jobs:
             mkdir -p "$VALUES_DIR"
             STRINGS_FILE="$VALUES_DIR/strings.xml"
             
-            # Cria o arquivo com o conteúdo padrão
-            cat > "$STRINGS_FILE" << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Nubank</string>
-</resources>
-EOF
+            # Cria o arquivo com o conteúdo padrão usando printf para evitar problemas com heredoc no YAML
+            printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <string name="app_name">Nubank</string>\n</resources>\n' > "$STRINGS_FILE"
             echo "✅ strings.xml criado com app_name=Nubank em: $STRINGS_FILE"
           fi
 
